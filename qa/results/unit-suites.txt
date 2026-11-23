@@ -1,0 +1,28 @@
+== backend pytest, 3 consecutive runs (flakiness check) ==
+232 passed, 4 deselected in 6.00s
+232 passed, 4 deselected in 6.25s
+232 passed, 4 deselected in 6.02s
+
+== backend: by area ==
+  50 tests/test_gemini_service.py
+  94 tests/test_interview_api.py
+  22 tests/test_no_fake_data.py
+  39 tests/test_qa_regressions.py
+  24 tests/test_schema_conformance.py
+   3 tests/test_store.py
+
+== live Gemini tests (need a key) ==
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_gemini_live.py:56: GEMINI_API_KEY is not configured in backend/.env
+SKIPPED [1] tests/test_gemini_live.py:66: GEMINI_API_KEY is not configured in backend/.env
+SKIPPED [1] tests/test_gemini_live.py:84: GEMINI_API_KEY is not configured in backend/.env
+SKIPPED [1] tests/test_gemini_live.py:92: GEMINI_API_KEY is not configured in backend/.env
+4 skipped, 232 deselected in 0.12s
+
+== frontend lint / unit tests / production build ==
+
+ Test Files  4 passed (4)
+      Tests  124 passed (124)
+dist/assets/index-BgwSNBpL.css   38.76 kB │ gzip:   7.36 kB
+dist/assets/index-BoOLwyrH.js   425.99 kB │ gzip: 134.23 kB
+✓ built in 412ms

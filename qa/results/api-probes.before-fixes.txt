@@ -1,0 +1,158 @@
+
+=== qa/api-probes.mjs ===
+
+A. Routes and methods
+  ✔ GET on a POST endpoint → 405 METHOD_NOT_ALLOWED in the standard error shape (got 405)
+  ✔ PUT → 405 METHOD_NOT_ALLOWED in the standard error shape (got 405)
+  ✔ DELETE → 405 METHOD_NOT_ALLOWED in the standard error shape (got 405)
+  ✔ POST on health → 405 METHOD_NOT_ALLOWED in the standard error shape (got 405)
+  ✔ unknown route → 404 in the standard error shape (got 404)
+  ✔ GET / → no server error (got 404)
+  ✔ trailing slash on start → no server error (got 201)
+  ✔ health → 200, reports ai_configured, never the key
+
+B. Malformed request bodies (must be 4xx with the standard shape, never 5xx)
+  ✔ no body → 4xx in the standard shape (got 422)
+  ✔ text/plain body holding valid JSON → 4xx in the standard shape (got 422)
+  ✔ JSON null → 4xx in the standard shape (got 422)
+  ✔ JSON array → 4xx in the standard shape (got 422)
+  ✔ truncated JSON → 4xx in the standard shape (got 422)
+  ✔ invalid UTF-8 bytes → 4xx in the standard shape (got 400)
+  ✔ 10,000-level nested JSON → 4xx in the standard shape (got 400)
+  ✔ empty object → 4xx in the standard shape (got 422)
+
+C. Unusual field types in submit-answer
+  ✔ question_number "1" (string) → no server error, standard shape on failure (got 200 accepted)
+  ✔ question_number 1.0 → no server error, standard shape on failure (got 409 ANSWER_ALREADY_SUBMITTED)
+  ✔ question_number 1.5 → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ question_number true → no server error, standard shape on failure (got 409 ANSWER_ALREADY_SUBMITTED)
+  ✔ question_number null → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ question_number [1] → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ question_number 2^63 → no server error, standard shape on failure (got 404 QUESTION_NOT_FOUND)
+  ✔ question_number -1 → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ answer as number → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ answer as object → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ skipped "yes" → no server error, standard shape on failure (got 409 ANSWER_ALREADY_SUBMITTED)
+  ✔ skipped 2 → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ extra unknown field → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+
+D. Hostile or malformed session ids (must be 404 SESSION_NOT_FOUND, no 5xx)
+  ✔ unknown uuid / results → 404 SESSION_NOT_FOUND (got 404)
+  ✔ unknown uuid / evaluate → 404 SESSION_NOT_FOUND (got 404)
+  ✔ unknown uuid / submit → 404 SESSION_NOT_FOUND (got 404)
+  ✔ not a uuid / results → 404 SESSION_NOT_FOUND (got 404)
+  ✔ not a uuid / evaluate → 404 SESSION_NOT_FOUND (got 404)
+  ✔ not a uuid / submit → 404 SESSION_NOT_FOUND (got 404)
+  ✘ path traversal / results → 404 SESSION_NOT_FOUND (got 404)
+  ✘ path traversal / evaluate → 404 SESSION_NOT_FOUND (got 404)
+  ✘ path traversal / submit → 404 SESSION_NOT_FOUND (got 404)
+  ✔ SQL-looking / results → 404 SESSION_NOT_FOUND (got 404)
+  ✔ SQL-looking / evaluate → 404 SESSION_NOT_FOUND (got 404)
+  ✔ SQL-looking / submit → 404 SESSION_NOT_FOUND (got 404)
+  ✘ script tag / results → 404 SESSION_NOT_FOUND (got 404)
+  ✘ script tag / evaluate → 404 SESSION_NOT_FOUND (got 404)
+  ✘ script tag / submit → 404 SESSION_NOT_FOUND (got 404)
+  ✔ NUL byte / results → 404 SESSION_NOT_FOUND (got 404)
+  ✔ NUL byte / evaluate → 404 SESSION_NOT_FOUND (got 404)
+  ✔ NUL byte / submit → 404 SESSION_NOT_FOUND (got 404)
+  ✔ unicode / results → 404 SESSION_NOT_FOUND (got 404)
+  ✔ unicode / evaluate → 404 SESSION_NOT_FOUND (got 404)
+  ✔ unicode / submit → 404 SESSION_NOT_FOUND (got 404)
+  ✔ 10,000 characters / results → 404 SESSION_NOT_FOUND (got 404)
+  ✔ 10,000 characters / evaluate → 404 SESSION_NOT_FOUND (got 404)
+  ✔ 10,000 characters / submit → 404 SESSION_NOT_FOUND (got 404)
+  ✔ another valid id with a changed character / results → 404 SESSION_NOT_FOUND (got 404)
+  ✔ another valid id with a changed character / evaluate → 404 SESSION_NOT_FOUND (got 404)
+  ✔ another valid id with a changed character / submit → 404 SESSION_NOT_FOUND (got 404)
+  ✘ a 10,000-character id is not echoed back in full (response is 10184 bytes)
+
+E. Input boundaries
+  ✔ name 2 characters "Jo" → 201 (got 201)
+  ✔ name 1 character → 422 (got 422)
+  ✔ name 50 characters → 201 (got 201)
+  ✔ name 51 characters → 422 (got 422)
+  ✔ name hyphen, dot and apostrophe "Mary-Jane O'Neil Jr." → 201 (got 201)
+  ✘ name accented letters "José Álvarez" → 201 (got 422)
+  ✘ name "Zoë Müller" → 201 (got 422)
+  ✘ name Vietnamese "Nguyễn Văn An" → 201 (got 422)
+  ✘ name Chinese "李雷" → 201 (got 422)
+  ✘ name typographic apostrophe "O’Neil" (what phone keyboards insert) → 201 (got 422)
+  ✔ name digits "Priya2" → 422 (got 422)
+  ✔ name symbols "Priya<script>" → 422 (got 422)
+  ✔ name leading space only "   " → 422 (got 422)
+  ✔ name emoji "Priya 😀" → 422 (got 422)
+  ✔ answer 9 characters → 422 (got 422)
+  ✔ answer 10 characters → 200 (got 200)
+  ✔ answer 2,000 characters → 200 (got 200)
+  ✔ answer 2,001 characters → 422 (got 422)
+  ✔ answer whitespace only → 422 (got 422)
+  ✔ answer emoji only (10) → 200 (got 200)
+  ✔ answer HTML → 200 (got 200)
+  ✔ answer NUL bytes → 200 (got 200)
+  ✔ answer RTL text → 200 (got 200)
+
+F. Oversized request bodies
+   · 1 MB answer → HTTP 422 in 6 ms (backend memory now 84 MB, was 82 MB)
+  ✔ 1 MB body is rejected (413/422), not processed (got 422)
+  ✔ 1 MB body is refused before it is read into memory (413) rather than parsed and then rejected (got 422)
+   · 10 MB answer → HTTP 422 in 55 ms (backend memory now 125 MB, was 82 MB)
+  ✔ 10 MB body is rejected (413/422), not processed (got 422)
+  ✘ 10 MB body is refused before it is read into memory (413) rather than parsed and then rejected (got 422)
+   · 64 MB answer → HTTP 422 in 351 ms (backend memory now 350 MB, was 82 MB)
+  ✔ 64 MB body is rejected (413/422), not processed (got 422)
+  ✘ 64 MB body is refused before it is read into memory (413) rather than parsed and then rejected (got 422)
+
+G. Response headers
+  ✘ API responses send x-content-type-options: nosniff (got null)
+  ✘ API responses send cache-control: no-store (got null)
+   · server header: uvicorn
+  ✘ session data (results) is not cacheable (Cache-Control: no-store)
+
+H. CORS
+  ✔ allowed origin localhost:5173 → allowed
+  ✔ credentials are not enabled
+  ✔ only GET/POST are allowed (GET, POST)
+  ✔ 127.0.0.1:5173 variant → allowed
+  ✔ origin http://evil.example → not allowed
+  ✔ origin http://localhost:5173.evil.com → not allowed
+  ✔ origin http://evil.com/localhost:5173 → not allowed
+  ✔ origin null → not allowed
+  ✔ origin https://localhost:5173 → not allowed
+  ✔ origin http://localhost:5174 → not allowed
+  ✔ origin http://localhost → not allowed
+  ✔ a preflight asking for Authorization/custom headers is not granted
+  ✔ a simple cross-origin POST from another origin gets no CORS grant (browser will not expose the response)
+
+I. Concurrency (duplicate submissions and races)
+  ✔ 20 simultaneous submits of the same answer → exactly one 200 and nineteen 409 (got {"200":1,"409":19})
+  ✔ 20 simultaneous evaluations → all 200 and identical
+  ✔ 20 simultaneous evaluations made exactly 1 Gemini request (made 1)
+  ✔ 20 simultaneous result requests → all 200 and identical
+  ✔ 20 simultaneous result requests made exactly 1 Gemini request (made 1)
+  ✔ 20 simultaneous interviews → 20 distinct sessions
+
+J. Progress, duplicates and incomplete interviews
+  ✔ progress after 1 answer: 1 answered, 4 remaining, 20%, next question 2
+  ✔ a second answer for the same question → 409 ANSWER_ALREADY_SUBMITTED
+  ✔ skipping twice is idempotent (still 1 skipped)
+  ✔ incomplete interview → 409 RESULTS_NOT_READY listing exactly what is missing ({"unanswered":[3,4,5],"unevaluated":[1]})
+  ✔ evaluating an unanswered question → 409 ANSWER_REQUIRED
+  ✔ evaluating a skipped question → 409 QUESTION_SKIPPED
+  ✔ question 6 → 404 QUESTION_NOT_FOUND
+
+K. API response times: application overhead (the stand-in Gemini answers instantly, so this is NOT real Gemini latency)
+   · start     n=25  p50=5.1 ms  p95=5.9 ms  max=6 ms
+   · submit    n=25  p50=1.1 ms  p95=2 ms  max=2.1 ms
+   · evaluate  n=25  p50=4.8 ms  p95=5.8 ms  max=6.6 ms
+   · results   n=25  p50=4.2 ms  p95=5 ms  max=5.6 ms
+  ✔ every endpoint p95 < 500 ms of application overhead
+
+L. Secrets and private content in the backend log
+  ✔ the API key never appears in 109,411 characters of log output
+  ✔ candidate answers never appear in the log
+  ✔ candidate names never appear in the log
+  ✔ each Gemini call is logged (purpose, model, time) without content
+
+api-probes: 17 FAILED of 120
+
+SOME SCRIPTS FAILED (backend restored: real configuration)

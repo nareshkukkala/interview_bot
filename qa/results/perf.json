@@ -1,0 +1,25 @@
+{
+  "bundle": [
+    {
+      "f": "index-Bn43My4r.css",
+      "raw": 40891,
+      "gz": 7755
+    },
+    {
+      "f": "index-LMIqt1Fx.js",
+      "raw": 430161,
+      "gz": 133903
+    }
+  ],
+  "medianLoad": {
+    "ttfb": 5.799999982118607,
+    "dcl": 144.7999999821186,
+    "load": 145,
+    "fcp": 204,
+    "lcp": 204,
+    "requests": 3,
+    "ownRequests": 2,
+    "ownBytes": 142258
+  },
+  "note": "localhost, production build, cache disabled; not a real-network measurement"
+}

@@ -1,0 +1,79 @@
+
+=== qa/browser-security-perf.mjs ===
+
+Setup: production build served by vite preview (a different port: the backend CORS origin is pointed at it)
+   · preview http://localhost:50656  ·  backend http://localhost:8000
+
+P1. Bundle size
+   · index-BgwSNBpL.css  37.9 KB  (7.2 KB gzip)
+   · index-BoOLwyrH.js  416.0 KB  (129.8 KB gzip)
+  ✔ JavaScript is 129.8 KB gzip (budget 150 KB)
+  ✔ CSS is 7.2 KB gzip (budget 20 KB)
+
+P2. Page load (production build, cache disabled, median of 5)
+   · TTFB 8 ms · DOMContentLoaded 169 ms · load 169 ms · FCP 216 ms · LCP 216 ms · 3 requests (2 from the app, 138 KB transferred)
+  ✔ first contentful paint 216 ms < 1500 ms (local server: measures the app, not a real network)
+  ✔ load event 169 ms < 2500 ms
+
+P3. API calls: no polling, no duplicates, and the complete journey works in the production build
+  ✔ an idle dashboard makes no API calls (no polling)
+  ✔ an idle interview room (timer running 4.5 s) makes no API calls beyond the start request (1 total)
+  ✔ a full 5-answer interview makes exactly 12 API calls: 1 start, 5 submit, 5 evaluate, 1 results (made 12)
+  ✔ the results page makes no further calls while idle
+  ✔ every call succeeded
+  ✔ Gemini received exactly 7 requests: 1 questions + 5 evaluations + 1 summary (received 7)
+   · JS heap after the journey: 6.2 MB · DOM nodes 2997 · listeners 7706
+  ✔ JS heap stays under 60 MB after a full interview
+  ✔ no console errors or warnings in the production build (0 messages)
+
+S1. What the browser received and stored
+  ✔ the API key never appears in any API response or on the page
+  ✔ expected concepts and criteria (answer hints) never reach the browser
+  ✔ nothing is stored in cookies, localStorage or sessionStorage (answers stay in memory)
+   · hosts contacted by the browser: fonts.googleapis.com, fonts.gstatic.com, localhost:50656, localhost:8000
+  ✔ the browser only talks to the app, the API and Google Fonts: it never contacts a Gemini endpoint
+  ✔ no request from the browser goes to Google's AI endpoints (Gemini is only called by the backend)
+   · INFO: the page loads the Geist typeface from fonts.googleapis.com / fonts.gstatic.com, which tells Google the visitor's IP address. Self-host the font to avoid this.
+
+S2. Secret scan of the frontend source, the production bundle and the repository
+  ✔ no API-key-shaped strings in 119 project files (excluding dependencies)
+  ✔ the production bundle contains no Gemini key, header or endpoint
+  ✔ no VITE_* variable can carry a key (everything VITE_* is public in the bundle)
+   · backend/.env exists; git ignore check unavailable (not a git repository): .gitignore lists .env, verified below
+   · frontend/.env exists; git ignore check unavailable (not a git repository): .gitignore lists .env, verified below
+  ✔ .gitignore excludes .env and .env.* but keeps the .env.example templates
+  ✔ backend/.env.example holds only a placeholder
+
+S3. Files the dev server must not serve
+  ✔ dev server: /.env does not expose file contents (HTTP 403)
+  ✔ dev server: /.env.local does not expose file contents (HTTP 200)
+  ✔ dev server: /.env.example does not expose file contents (HTTP 403)
+  ✔ dev server: /../backend/.env does not expose file contents (HTTP 200)
+  ✔ dev server: /@fs/Users/nareshkukkala/Documents/claude/Interview Bot/InterviewIQ/backend/.env does not expose file contents (HTTP 0)
+  ✔ dev server: /@fs/Users/nareshkukkala/Documents/claude/Interview Bot/InterviewIQ/backend/.env.example does not expose file contents (HTTP 0)
+  ✔ dev server: /@fs/etc/passwd does not expose file contents (HTTP 403)
+
+R. Responsive layout and basic accessibility: desktop 1440, tablet 768, mobile 390 (production build)
+  ✔ desktop: none of the 8 screens scrolls horizontally
+  ✘ desktop: every button and link has an accessible name (unnamed: /settings: 2)
+  ✔ desktop: every form field has a label
+  ✔ desktop: every screen has exactly one h1
+  ✔ desktop: the page declares its language
+  ✔ desktop: no console errors across all screens
+  ✔ tablet: none of the 8 screens scrolls horizontally
+  ✘ tablet: every button and link has an accessible name (unnamed: /settings: 2)
+  ✔ tablet: every form field has a label
+  ✔ tablet: every screen has exactly one h1
+  ✔ tablet: the page declares its language
+  ✔ tablet: no console errors across all screens
+  ✔ mobile: none of the 8 screens scrolls horizontally
+  ✘ mobile: every button and link has an accessible name (unnamed: /settings: 2)
+  ✔ mobile: every form field has a label
+  ✔ mobile: every screen has exactly one h1
+  ✔ mobile: the page declares its language
+  ✔ mobile: no console errors across all screens
+   · INFO: interactive elements smaller than 32x32 px on a screen (worst screen): {"desktop":9,"tablet":9,"mobile":9}
+
+security-perf: 3 FAILED of 47
+
+SOME SCRIPTS FAILED (backend restored: real configuration)

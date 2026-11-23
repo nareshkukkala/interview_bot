@@ -1,0 +1,16 @@
+npm registry configured: http://registry.npmjs.org/
+=== npm audit via an explicit https registry (global config untouched) ===
+found 0 vulnerabilities
+
+[all deps] Severity: critical
+[all deps] Tinypool: Prototype Pollution gadget in worker options leads to Remote Code Execution - https://github.com/advisories/GHSA-5gmw-xhrv-c9v3
+[all deps] Tinypool: Prototype Pollution Gadget to RCE in run() options - https://github.com/advisories/GHSA-85c8-ppgw-ccpr
+[all deps] fix available via `npm audit fix --force`
+[all deps] Will install vitest@5.1.1, which is a breaking change
+[all deps] node_modules/tinypool
+[all deps] 
+[all deps] 
+[all deps] 3 vulnerabilities (1 moderate, 2 critical)
+[all deps] 
+[all deps] To address all issues (including breaking changes), run:
+[all deps]   npm audit fix --force

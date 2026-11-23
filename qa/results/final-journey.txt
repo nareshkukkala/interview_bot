@@ -1,0 +1,129 @@
+
+=== qa/browser-journey.mjs ===
+
+1. Full interview: Gemini questions → answers → Gemini evaluation → results
+  ✔ start: loading screen says the questions are being written
+  ✔ POST /api/interviews/start → 201
+  ✔ URL uses the server's session id (adcffa73…)
+  ✔ question 1 on screen is the question Gemini generated (marked '(stub)')
+  ✔ expected concepts stay on the server (not sent to the browser)
+  ✔ Gemini got exactly 1 request (question generation) with the API key header
+  ✔ the configuration was sent to Gemini (role, 3 technical + 2 HR)
+  ✔ the candidate's name was not sent to Gemini
+  ✔ submit: loading state shown while Gemini evaluates
+  ✔ feedback shows the missing concepts
+  ✔ feedback shows the recommended topic
+  ✔ feedback shows Gemini's strengths and improvement areas
+  ✔ feedback shows Gemini's ideal answer
+  ✔ evaluation: overall 8.8/10 (backend average of 9, 9, 8, 9), 3 strengths, 3 improvement areas
+  ✔ Gemini got 6 requests in total: 1 question generation + 4 evaluations + 1 summary (the skip makes none)
+  ✔ the summary request carries the real overall score and strongest/weakest skill
+  ✔ the summary is written from the evaluations: no raw answers, no name
+  ✔ every request used the key and the model from the backend configuration
+  ✔ each evaluation request carries the question, concepts and the delimited answer
+  ✔ evaluations run at low temperature (consistent scoring)
+  ✔ results page shows the server's overall score (49/100, Average)
+  ✔ question scores 8.8, skipped 0, 2.0, 6.8, 6.8 (calculated by the backend)
+  ✔ learning recommendations come from Gemini's per-answer topics
+  ✔ no uncaught page errors
+  ✔ the API key is not in the backend log
+  ✔ candidate answers are not in the backend log
+  ✔ backend log records each Gemini call (purpose, model, time) without content
+  ✔ overall score card shows Gemini's summary and says who wrote it
+  ✔ overall score card explains how the score is calculated
+  ✔ skill progress shows the four real averages: Technical accuracy 5.0/10 | Relevance 5.6/10 | Clarity 4.4/10 | Completeness 4.4/10
+  ✔ Relevance is tagged Strongest and Clarity Weakest (from the real averages)
+  ✔ 5 question-wise score cards
+  ✔ card 1: 8.8/10 with its four criterion scores
+  ✔ cards 2-5: skipped, 2.0, 6.8, 6.8
+  ✔ sections: skills, question-wise performance, strengths, improvement areas, learning, review
+  ✔ learning section lists the concepts Gemini reported as missing
+  ✔ actions: Back to Dashboard, Review Answers, Retake Interview
+  ✔ Review Answers: scrolls to the review section and opens the first answered question
+  ✔ review shows the answer, the ideal answer and what to study next
+  ✔ a card's Review answer opens that question
+  ✔ Expand all opens every question
+  ✔ Collapse all closes them
+  ✔ Retake Interview: setup is prefilled ({"name":"Priya Sharma","role":"python_developer","difficulty":"medium","type":"mixed"})
+  ✔ second interview: 18/100, "-31 points compared with your previous Python Developer interview" (from the real first interview)
+  ✔ second report: 5 cards, "Skipped 4 questions." under improvement areas
+  ✔ Back to Dashboard: 2 completed interviews, best score 49
+  ✔ the dashboard shows no sample or invented interviews
+  ✔ no uncaught page errors during the whole journey
+
+2. AI failures when starting an interview
+  ✔ rate limit: no interview was started
+  ✔ rate limit: the form keeps what was typed
+  ✔ rate limit: not retried (quota will not recover in a second)
+  ✔ rate limit: the retry started the interview
+  ✔ invalid key: the message points at GEMINI_API_KEY in backend/.env
+  ✔ invalid key: the key is not shown
+  ✔ unavailable: the backend retried once, then reported the failure
+  ✔ invalid AI output: reported, nothing stored
+  ✔ no uncaught page errors
+
+3. AI failures when evaluating an answer
+  ✔ rate limit (429): friendly message ("busy or its quota is used up")
+  ✔ rate limit (429): no feedback is shown (nothing made up)
+  ✔ rate limit (429): the answer is saved (editor locked), submitted once
+  ✔ rate limit (429): retry re-sent only /evaluate; feedback now shown
+  ✔ rate limit (429): no uncaught page errors
+  ✔ invalid JSON from the AI (twice): friendly message ("response we could not use")
+  ✔ invalid JSON from the AI (twice): no feedback is shown (nothing made up)
+  ✔ invalid JSON from the AI (twice): the answer is saved (editor locked), submitted once
+  ✔ invalid JSON from the AI (twice): retry re-sent only /evaluate; feedback now shown
+  ✔ invalid JSON from the AI (twice): no uncaught page errors
+  ✔ content blocked by the safety filter: friendly message ("rewording your answer")
+  ✔ content blocked by the safety filter: no feedback is shown (nothing made up)
+  ✔ content blocked by the safety filter: the answer is saved (editor locked), submitted once
+  ✔ content blocked by the safety filter: retry re-sent only /evaluate; feedback now shown
+  ✔ content blocked by the safety filter: no uncaught page errors
+  ✔ timeout: loading state stays visible while waiting
+  ✔ timeout: "took too long" and the answer is saved
+
+4. Finish with an unscored answer
+  ✔ finish recorded the 4 unanswered questions as skipped ([2,3,4,5])
+  ✔ finish scored the saved-but-unscored answer before building the report
+  ✔ results: 1 of 5 answered, "Skipped 4 questions." listed first
+  ✔ no uncaught page errors
+
+5. Network outage and an expired session
+  ✔ backend down: friendly message, form kept, Start usable again
+  ✔ submit during outage: the draft is preserved
+  ✔ restarted server forgot the session → expired-session screen with a way forward
+  ✔ no uncaught page errors
+
+R1. The AI summary fails: the real report still shows, and Try again fixes only the summary
+  ✔ the real scores and feedback are shown
+  ✔ the reason is shown in plain language
+  ✔ no summary text is invented
+  ✔ Try again: the summary appears and the notice disappears
+  ✔ only the summary was requested again (1 evaluation, 2 summary requests)
+  ✔ no uncaught page errors
+
+R2. Nothing answered: no summary is requested and none is made up
+  ✔ score 0 and an honest "nothing to summarise"
+  ✔ no strongest/weakest skill is claimed
+  ✔ skills show their real value of 0
+  ✔ Gemini was asked only to write the questions (1 request)
+  ✔ all 5 cards say Skipped
+  ✔ no uncaught page errors
+
+R3. Only real data: no invented history unless you opt in
+  ✔ a fresh dashboard shows no interviews, no averages and no samples
+  ✔ history is empty too
+  ✔ performance says there is not enough data (no invented trend)
+  ✔ the demo data is an explicit, plainly described opt-in
+  ✔ opting in shows example interviews, each labelled "Sample"
+  ✔ no uncaught page errors
+
+6. No Gemini key configured (the real backend/.env), no stub
+  ✔ GET /api/health → ai_configured: false
+  ✔ POST /api/interviews/start → 503 AI_NOT_CONFIGURED, no questions invented
+  ✔ the UI tells you exactly what to do: add GEMINI_API_KEY to backend/.env
+  ✔ no interview is started and no questions are shown
+  ✔ no uncaught page errors
+
+browser-journey: ALL 105 PASSED
+
+ALL SCRIPTS PASSED (backend restored: real configuration)

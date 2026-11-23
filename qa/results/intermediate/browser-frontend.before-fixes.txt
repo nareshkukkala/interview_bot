@@ -1,0 +1,124 @@
+
+=== qa/browser-frontend.mjs ===
+
+1. Navigation and layout: desktop (1440px)
+  ✔ / renders "Welcome to InterviewIQ" with no horizontal scrolling
+  ✔ /interview/new renders "Set up your interview" with no horizontal scrolling
+  ✔ /history renders "Interview history" with no horizontal scrolling
+  ✔ /performance renders "Performance" with no horizontal scrolling
+  ✔ /settings renders "Settings" with no horizontal scrolling
+  ✔ /nope renders "Page not found" with no horizontal scrolling
+  ✔ document title follows the route (Interview history | InterviewIQ)
+  ✔ sidebar shows the 5 required items (Dashboard, Start Interview, Interview History, Performance, Settings)
+  ✔ sidebar → Start Interview: page changes and exactly that item is marked current
+  ✔ sidebar → Interview History: page changes and exactly that item is marked current
+  ✔ sidebar → Performance: page changes and exactly that item is marked current
+  ✔ sidebar → Settings: page changes and exactly that item is marked current
+  ✔ sidebar → Dashboard: page changes and exactly that item is marked current
+  ✔ no console errors or warnings across all screens (24 messages, 0 uncaught errors)
+
+1. Navigation and layout: tablet (768px)
+  ✔ / renders "Welcome to InterviewIQ" with no horizontal scrolling
+  ✔ /interview/new renders "Set up your interview" with no horizontal scrolling
+  ✔ /history renders "Interview history" with no horizontal scrolling
+  ✔ /performance renders "Performance" with no horizontal scrolling
+  ✔ /settings renders "Settings" with no horizontal scrolling
+  ✔ /nope renders "Page not found" with no horizontal scrolling
+  ✔ document title follows the route (Interview history | InterviewIQ)
+  ✔ sidebar is hidden and a menu button is shown
+  ✔ the menu button opens a drawer with the 5 navigation items
+  ✔ Escape closes the drawer
+  ✔ choosing an item navigates and closes the drawer
+  ✔ no console errors or warnings across all screens (24 messages, 0 uncaught errors)
+
+1. Navigation and layout: mobile (390px)
+  ✔ / renders "Welcome to InterviewIQ" with no horizontal scrolling
+  ✔ /interview/new renders "Set up your interview" with no horizontal scrolling
+  ✔ /history renders "Interview history" with no horizontal scrolling
+  ✔ /performance renders "Performance" with no horizontal scrolling
+  ✔ /settings renders "Settings" with no horizontal scrolling
+  ✔ /nope renders "Page not found" with no horizontal scrolling
+  ✔ document title follows the route (Interview history | InterviewIQ)
+  ✔ sidebar is hidden and a menu button is shown
+  ✔ the menu button opens a drawer with the 5 navigation items
+  ✔ Escape closes the drawer
+  ✔ choosing an item navigates and closes the drawer
+  ✔ no console errors or warnings across all screens (24 messages, 0 uncaught errors)
+
+2. Interview configuration and validation
+  ✔ empty form: name error shown and focus moves to the name field
+  ✔ an invalid form sends no request to the server
+  ✔ name "José Álvarez" is accepted
+  ✔ name "Nguyễn Văn An" is accepted
+  ✔ name "李雷" is accepted
+  ✔ name "O’Neil" is accepted
+  ✔ name "Mary-Jane O'Neil Jr." is accepted
+  ✔ name "  Priya  " is accepted
+  ✔ name "A" is rejected
+  ✔ name "Priya2" is rejected
+  ✔ name "Priya<script>" is rejected
+  ✔ name "Priya 😀" is rejected
+  ✔ name "   " is rejected
+  ✔ name "xxxxxxxxxxxx…" is rejected
+  ✔ name "-Priya" is rejected
+  ✔ the error clears as soon as the name becomes valid (live re-validation)
+  ✔ the summary panel follows role, difficulty and type
+  ✔ question count is shown and locked at 5 (approved scope)
+  ✘ all 7 roles are offered, in the specified order
+  ✔ no console errors on the setup screen
+
+3. Interview room
+  ✔ room opens on question 1 with role, difficulty and progress
+  ✔ the question navigator has 5 entries
+  ✔ Previous is disabled on question 1
+  ✔ Next moves to question 2
+  ✔ clicking the navigator jumps to question 4
+  ✔ a draft survives navigating away and back
+  ✔ a draft can be edited freely before submission; the counter updates (37 / 2,000)
+  ✔ Submit is disabled for an empty answer
+  ✔ Submit is disabled for a whitespace-only answer
+  ✔ a 9-character answer is refused with a message and nothing is sent
+  ✔ Skip records the skip and moves to the next open question
+  ✔ the skip was stored on the server
+  ✔ a skipped question can be reopened
+  ✔ a 10-character answer is accepted via Ctrl+Enter, the skip becomes an answer, and the editor locks
+  ✔ timer starts at 0:00 and counts up (0:00 → 0:02)
+  ✔ returning to a question keeps its time instead of resetting (0:02)
+  ✔ the timer pauses while the tab is hidden (0:02 → 0:02)
+  ✔ the timer stops once the answer is submitted (0:01)
+  ✔ Exit asks for confirmation
+  ✔ Escape dismisses the confirmation and keeps the interview
+  ✔ confirming Exit returns to the dashboard and the interview is no longer offered for resume
+  ✔ no console errors in the room
+
+4a. Very long answers, and hostile text
+  ✔ typing 2,100 characters stops at the 2,000-character limit
+  ✔ a 2,500-character answer set by script is refused client-side and nothing is sent
+  ✘ a 2,000-character unbroken answer does not break the room layout (overflowing: )
+   · (mobile is re-checked on the results page in section 7)
+  ✔ HTML/script in an answer is displayed as literal text; nothing executes and no elements are injected
+  ✔ emoji, Arabic and Chinese text round-trip intact
+  ✘ the long and hostile answers do not break the results page (overflowing: )
+  ✔ the review shows the markup as text too
+  ✔ no console errors
+
+4b. Network disconnection, refresh, back button, multiple sessions
+  ✔ browser offline: friendly error, the draft is kept and Submit is usable again
+  ✔ browser offline: nothing is counted as answered
+  ✔ browser offline: Skip is refused with an error and is not recorded
+  ✔ back online: the retry works and the server received exactly one submission
+  ✔ refreshing mid-interview triggers the browser's "leave site?" warning
+  ✔ after a refresh the app shows a clear message and a way to start again (progress is not restored: known limitation)
+  ✔ refresh causes no uncaught errors
+  ✘ browser Back from the room lands on the dashboard, which offers to resume
+file:///Users/nareshkukkala/Documents/claude/Interview%20Bot/InterviewIQ/qa/lib/browser.mjs:73
+  throw new Error(`No visible ${selector} containing "${label}"`)
+        ^
+
+Error: No visible a containing "Resume your"
+    at click (file:///Users/nareshkukkala/Documents/claude/Interview%20Bot/InterviewIQ/qa/lib/browser.mjs:73:9)
+    at async file:///Users/nareshkukkala/Documents/claude/Interview%20Bot/InterviewIQ/qa/browser-frontend.mjs:296:3
+
+Node.js v22.22.0
+
+SOME SCRIPTS FAILED (backend restored: real configuration)

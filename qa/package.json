@@ -1,0 +1,9 @@
+{
+  "name": "interviewiq-qa",
+  "private": true,
+  "type": "module",
+  "description": "Browser and HTTP QA scripts for InterviewIQ. See README.md.",
+  "dependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}

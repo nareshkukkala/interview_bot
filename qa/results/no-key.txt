@@ -1,0 +1,29 @@
+
+=== qa/no-key.mjs ===
+
+1. The API with no key
+  ✔ GET /api/health → ok, ai_configured: false, model: gemini-2.5-flash
+  ✔ health reveals whether a key exists, never the key
+  ✔ POST start → 503 AI_NOT_CONFIGURED naming exactly what to fix (The AI service is not configured. Add GEMINI_API_KEY to backend/.env and restart the backend.)
+  ✔ no questions and no session are returned: nothing is made up
+  ✔ invalid input is still rejected first (422), so validation does not depend on the AI
+  ✔ submit-answer for a session that cannot exist (none can be created without AI) → 404
+  ✔ evaluate for a session that cannot exist (none can be created without AI) → 404
+  ✔ results for such a session → 404
+
+2. The UI with no key
+  ✔ the page tells the user exactly what to do: add GEMINI_API_KEY to backend/.env
+  ✔ the user stays on the setup form; no interview room opens
+  ✔ no question of any kind is shown
+  ✔ the form keeps the user's choices so they can retry after fixing the key
+  ✔ no uncaught errors or console warnings (the browser logs only its own note about the 503)
+  ✔ the dashboard shows no interviews, no averages and no sample data
+
+3. The backend log
+  ✔ the backend logs a startup warning that the key is missing
+  ✔ the log never contains a key
+   · Real Gemini behaviour (question quality, scoring, ideal answers) cannot be tested without a key: run `python -m pytest -m live -s` in backend/ after adding GEMINI_API_KEY.
+
+no-key: ALL 16 PASSED
+
+ALL SCRIPTS PASSED (backend restored: real configuration)

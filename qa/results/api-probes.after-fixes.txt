@@ -1,0 +1,167 @@
+
+=== qa/api-probes.mjs ===
+
+A. Routes and methods
+  ✔ GET on a POST endpoint → 405 METHOD_NOT_ALLOWED in the standard error shape (got 405)
+  ✔ PUT → 405 METHOD_NOT_ALLOWED in the standard error shape (got 405)
+  ✔ DELETE → 405 METHOD_NOT_ALLOWED in the standard error shape (got 405)
+  ✔ POST on health → 405 METHOD_NOT_ALLOWED in the standard error shape (got 405)
+  ✔ unknown route → 404 in the standard error shape (got 404)
+  ✔ GET / → no server error (got 404)
+  ✔ trailing slash on start → no server error (got 201)
+  ✔ health → 200, reports ai_configured, never the key
+
+B. Malformed request bodies (must be 4xx with the standard shape, never 5xx)
+  ✔ no body → 4xx in the standard shape (got 422)
+  ✔ text/plain body holding valid JSON → 4xx in the standard shape (got 422)
+  ✔ JSON null → 4xx in the standard shape (got 422)
+  ✔ JSON array → 4xx in the standard shape (got 422)
+  ✔ truncated JSON → 4xx in the standard shape (got 422)
+  ✔ invalid UTF-8 bytes → 4xx in the standard shape (got 400)
+  ✔ 10,000-level nested JSON → 4xx in the standard shape (got 400)
+  ✔ empty object → 4xx in the standard shape (got 422)
+
+C. Unusual field types in submit-answer
+  ✔ question_number "1" (string) → rejected with 422 (got 422 VALIDATION_ERROR)
+  ✔ question_number 1.0 → no server error, standard shape on failure (got 200 accepted)
+  ✔ question_number 1.5 → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ question_number true → rejected with 422 (got 422 VALIDATION_ERROR)
+  ✔ question_number null → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ question_number [1] → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ question_number 2^63 → no server error, standard shape on failure (got 404 QUESTION_NOT_FOUND)
+  ✔ question_number -1 → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ answer as number → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ answer as object → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ skipped "yes" → rejected with 422 (got 422 VALIDATION_ERROR)
+  ✔ skipped 2 → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+  ✔ extra unknown field → no server error, standard shape on failure (got 422 VALIDATION_ERROR)
+
+D. Hostile or malformed session ids (must be 404, never 5xx; ids containing / never reach the route, so NOT_FOUND is correct)
+  ✔ unknown uuid / results → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ unknown uuid / evaluate → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ unknown uuid / submit → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ not a uuid / results → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ not a uuid / evaluate → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ not a uuid / submit → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ path traversal / results → 404 in the standard shape, no 5xx (got 404 NOT_FOUND)
+  ✔ path traversal / evaluate → 404 in the standard shape, no 5xx (got 404 NOT_FOUND)
+  ✔ path traversal / submit → 404 in the standard shape, no 5xx (got 404 NOT_FOUND)
+  ✔ SQL-looking / results → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ SQL-looking / evaluate → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ SQL-looking / submit → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ script tag / results → 404 in the standard shape, no 5xx (got 404 NOT_FOUND)
+  ✔ script tag / evaluate → 404 in the standard shape, no 5xx (got 404 NOT_FOUND)
+  ✔ script tag / submit → 404 in the standard shape, no 5xx (got 404 NOT_FOUND)
+  ✔ NUL byte / results → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ NUL byte / evaluate → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ NUL byte / submit → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ unicode / results → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ unicode / evaluate → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ unicode / submit → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ 10,000 characters / results → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ 10,000 characters / evaluate → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ 10,000 characters / submit → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ another valid id with a changed character / results → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ another valid id with a changed character / evaluate → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ another valid id with a changed character / submit → 404 in the standard shape, no 5xx (got 404 SESSION_NOT_FOUND)
+  ✔ a 10,000-character id is not echoed back in full (response is 248 bytes)
+
+E. Input boundaries
+  ✔ name 2 characters "Jo" → 201 (got 201)
+  ✔ name 1 character → 422 (got 422)
+  ✔ name 50 characters → 201 (got 201)
+  ✔ name 51 characters → 422 (got 422)
+  ✔ name hyphen, dot and apostrophe "Mary-Jane O'Neil Jr." → 201 (got 201)
+  ✔ name accented letters "José Álvarez" → 201 (got 201)
+  ✔ name "Zoë Müller" → 201 (got 201)
+  ✔ name Vietnamese "Nguyễn Văn An" → 201 (got 201)
+  ✔ name Chinese "李雷" → 201 (got 201)
+  ✔ name typographic apostrophe "O’Neil" (what phone keyboards insert) → 201 (got 201)
+  ✔ name digits "Priya2" → 422 (got 422)
+  ✔ name symbols "Priya<script>" → 422 (got 422)
+  ✔ name leading space only "   " → 422 (got 422)
+  ✔ name emoji "Priya 😀" → 422 (got 422)
+  ✔ answer 9 characters → 422 (got 422)
+  ✔ answer 10 characters → 200 (got 200)
+  ✔ answer 2,000 characters → 200 (got 200)
+  ✔ answer 2,001 characters → 422 (got 422)
+  ✔ answer whitespace only → 422 (got 422)
+  ✔ answer emoji only (10) → 200 (got 200)
+  ✔ answer HTML → 200 (got 200)
+  ✔ answer NUL bytes → 200 (got 200)
+  ✔ answer RTL text → 200 (got 200)
+
+F. Oversized request bodies
+   · 1 MB answer → HTTP 413 in 4 ms (backend memory now 82 MB, was 81 MB)
+  ✔ 1 MB body is rejected (413/422), not processed (got 413)
+  ✔ 1 MB body is refused before it is read into memory (413) rather than parsed and then rejected (got 413)
+   · 10 MB answer → HTTP 413 in 26 ms (backend memory now 82 MB, was 81 MB)
+  ✔ 10 MB body is rejected (413/422), not processed (got 413)
+  ✔ 10 MB body is refused before it is read into memory (413) rather than parsed and then rejected (got 413)
+   · 64 MB answer → HTTP 413 in 177 ms (backend memory now 72 MB, was 81 MB)
+  ✔ 64 MB body is rejected (413/422), not processed (got 413)
+  ✔ 64 MB body is refused before it is read into memory (413) rather than parsed and then rejected (got 413)
+
+G. Response headers
+  ✔ API responses send x-content-type-options: nosniff (got "nosniff")
+  ✔ API responses send cache-control: no-store (got "no-store")
+   · server header: uvicorn
+  ✔ session data (results) is not cacheable (Cache-Control: no-store)
+
+H. CORS
+  ✔ allowed origin localhost:5173 → allowed
+  ✔ credentials are not enabled
+  ✔ only GET/POST are allowed (GET, POST)
+  ✔ 127.0.0.1:5173 variant → allowed
+  ✔ origin http://evil.example → not allowed
+  ✔ origin http://localhost:5173.evil.com → not allowed
+  ✔ origin http://evil.com/localhost:5173 → not allowed
+  ✔ origin null → not allowed
+  ✔ origin https://localhost:5173 → not allowed
+  ✔ origin http://localhost:5174 → not allowed
+  ✔ origin http://localhost → not allowed
+  ✔ a preflight asking for Authorization/custom headers is not granted
+  ✔ a simple cross-origin POST from another origin gets no CORS grant (browser will not expose the response)
+
+I. Concurrency (duplicate submissions and races)
+  ✔ 20 simultaneous submits of the same answer → exactly one 200 and nineteen 409 (got {"200":1,"409":19})
+  ✔ 20 simultaneous evaluations → all 200 and identical
+  ✔ 20 simultaneous evaluations made exactly 1 Gemini request (made 1)
+  ✔ 20 simultaneous result requests → all 200 and identical
+  ✔ 20 simultaneous result requests made exactly 1 Gemini request (made 1)
+  ✔ 20 simultaneous interviews → 20 distinct sessions
+
+J. Progress, duplicates and incomplete interviews
+  ✔ progress after 1 answer: 1 answered, 4 remaining, 20%, next question 2
+  ✔ a second answer for the same question → 409 ANSWER_ALREADY_SUBMITTED
+  ✔ skipping twice is idempotent (still 1 skipped)
+  ✔ incomplete interview → 409 RESULTS_NOT_READY listing exactly what is missing ({"unanswered":[3,4,5],"unevaluated":[1]})
+  ✔ evaluating an unanswered question → 409 ANSWER_REQUIRED
+  ✔ evaluating a skipped question → 409 QUESTION_SKIPPED
+  ✔ question 6 → 404 QUESTION_NOT_FOUND
+
+K. API response times: application overhead (the stand-in Gemini answers instantly, so this is NOT real Gemini latency)
+   · start     n=25  p50=5.3 ms  p95=7.2 ms  max=17.3 ms
+   · submit    n=25  p50=1.2 ms  p95=1.9 ms  max=2.2 ms
+   · evaluate  n=25  p50=5 ms  p95=8.7 ms  max=9.3 ms
+   · results   n=25  p50=4.5 ms  p95=5.9 ms  max=6.1 ms
+  ✔ every endpoint p95 < 500 ms of application overhead
+
+L. Secrets and private content in the backend log
+  ✔ the API key never appears in 109,734 characters of log output
+  ✔ candidate answers never appear in the log
+  ✔ candidate names never appear in the log
+  ✔ each Gemini call is logged (purpose, model, time) without content
+
+M. Session expiry and eviction, with the backend restarted at TTL = 1 minute and a cap of 3 sessions
+  ✔ cap of 3: the oldest session was evicted → 404 SESSION_NOT_FOUND
+  ✔ the three newest sessions are alive (409 RESULTS_NOT_READY, not 404)
+   · waiting for the 1-minute idle TTL (about 65 s)...
+  ✔ activity at +20 s keeps a session alive (its idle timer restarts)
+  ✔ after 65 s idle every session has expired → 404 SESSION_NOT_FOUND (got 404, 404, 404)
+  ✔ writing to an expired session is refused, not silently recreated
+  ✔ a new interview can be started after sessions expired
+
+api-probes: ALL 126 PASSED
+
+ALL SCRIPTS PASSED (backend restored: real configuration)
